@@ -1,2 +1,2 @@
 # must-be
-Must-Be is a TypeScript generic validation tool.
+Must-Be-Check is a TypeScript generic validation tool.

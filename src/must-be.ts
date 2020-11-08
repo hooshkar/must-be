@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable prefer-rest-params */
 import "reflect-metadata";
-import { Exception, argsNoUndefined } from "basecript";
+import { Exception, ArgumentsCounter } from "basecript";
 import { Schema } from "./schema";
 import { RuleMap } from "./rule-map";
 import { CheckResult } from "./check-result";
@@ -12,7 +12,7 @@ export function Must<T, TRuleMap extends RuleMap<T> = RuleMap<T>>(
   map: TRuleMap
 ) {
   return (target: unknown, key: string | symbol): void => {
-    if (argsNoUndefined(arguments) > 2) {
+    if (ArgumentsCounter(arguments, undefined) > 2) {
       throw new Exception(`Decorator '${MustBeKey}' is for properties only.`);
     }
     const constructor = (target as any).constructor;
