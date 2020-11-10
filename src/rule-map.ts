@@ -71,12 +71,12 @@ export class RuleMap<T> {
     return this;
   }
 
-  in(...values: any[]): RuleMap<T> {
+  in(...values: unknown[]): RuleMap<T> {
     this._rules.push(new In(values));
     return this;
   }
 
-  notIn(...values: any[]): RuleMap<T> {
+  notIn(...values: unknown[]): RuleMap<T> {
     this._rules.push(new NotIn(values));
     return this;
   }

@@ -1,20 +1,21 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { IRule } from "../rule";
 import { MustBeCheck } from "../must-be";
 
-export class Check<T extends any> implements IRule<T> {
+export class Check<T> implements IRule<T> {
   private errors!: string[];
 
-  check(claim: any, p: string | symbol): boolean {
-    if (claim[p] === null || claim[p] === undefined) {
+  check(claim: unknown, p: string | symbol): boolean {
+    if ((claim as any)[p] === null || (claim as any)[p] === undefined) {
       return true;
     }
 
-    const result = MustBeCheck(claim[p]);
+    const result = MustBeCheck((claim as any)[p]);
     this.errors = result.errors;
     return result.pass;
   }
 
-  message(p: string | symbol): string[] {
+  message(): string[] {
     return this.errors || [];
   }
 }

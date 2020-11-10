@@ -1,14 +1,15 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { IRule } from "../rule";
 
-export class Min<T extends any> implements IRule<T> {
+export class Min<T> implements IRule<T> {
   constructor(readonly min: number) {}
 
-  check(claim: any, p: string): boolean {
-    if (typeof claim[p] !== "number") {
+  check(claim: unknown, p: string): boolean {
+    if (typeof (claim as any)[p] !== "number") {
       return true;
     }
 
-    return (claim[p] as number) >= this.min;
+    return ((claim as any)[p] as number) >= this.min;
   }
 
   message(p: string): string[] {

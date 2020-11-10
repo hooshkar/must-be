@@ -1,4 +1,4 @@
-import { Required, Defined } from "./rules";
+import { Required, Defined, KeyOf } from "./rules";
 import { IsString, IsNumber, IsBoolean } from "./rules";
 import { NotEmpty, Regex, In, NotIn } from "./rules";
 import { Min, Max, MinChar, MaxChar } from "./rules";
@@ -101,6 +101,12 @@ test("must be notIn", () => {
   expect(notIn.check({ id: "12345" }, "id")).toBe(true);
   expect(notIn.check({ id: 0 }, "id")).toBe(true);
   expect(notIn.check({ id: 11 }, "id")).toBe(true);
+});
+
+test("must be keyOf", () => {
+  const inRule = new KeyOf({ id: 1 });
+  expect(inRule.check({ name: "id" }, "name")).toBe(true);
+  expect(inRule.check({ name: "foo" }, "name")).toBe(false);
 });
 
 test("must be min", () => {

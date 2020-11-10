@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { IRule } from "../rule";
 
-export class Defined<T extends any> implements IRule<T> {
-  check(claim: any, p: string): boolean {
-    return claim[p] !== undefined;
+export class Defined<T> implements IRule<T> {
+  check(claim: unknown, p: string): boolean {
+    return (claim as any)[p] !== undefined;
   }
 
   message(p: string): string[] {

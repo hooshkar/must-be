@@ -1,12 +1,13 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { IRule } from "../rule";
 
-export class IsString<T extends any> implements IRule<T> {
-  check(claim: any, p: string): boolean {
-    if (claim[p] === null || claim[p] === undefined) {
+export class IsString<T> implements IRule<T> {
+  check(claim: unknown, p: string): boolean {
+    if ((claim as any)[p] === null || (claim as any)[p] === undefined) {
       return true;
     }
 
-    return typeof claim[p] === "string";
+    return typeof (claim as any)[p] === "string";
   }
 
   message(p: string): string[] {

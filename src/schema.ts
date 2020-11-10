@@ -7,7 +7,7 @@ export class Schema<T> {
   >();
   private _strict = false;
 
-  strict() {
+  strict(): void {
     this._strict = true;
   }
 

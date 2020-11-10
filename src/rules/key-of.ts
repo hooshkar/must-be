@@ -1,11 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { IRule } from "../rule";
+import { Keys } from "basecript";
 
-export class NotIn<T> implements IRule<T> {
-  constructor(readonly values: unknown[]) {}
+export class KeyOf<T> implements IRule<T> {
+  readonly keys: Array<keyof T>;
 
+  constructor(pattern: T) {
+    this.keys = Keys(pattern);
+  }
   check(claim: unknown, p: string): boolean {
-    return this.values.indexOf((claim as any)[p]) === -1;
+    return this.keys.indexOf((claim as any)[p]) !== -1;
   }
 
   message(p: string): string[] {

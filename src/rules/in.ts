@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { IRule } from "../rule";
 
-export class In<T extends any> implements IRule<T> {
-  constructor(readonly values: any[]) {}
+export class In<T> implements IRule<T> {
+  constructor(readonly values: T[]) {}
 
-  check(claim: any, p: string): boolean {
-    return this.values.indexOf(claim[p]) !== -1;
+  check(claim: unknown, p: string): boolean {
+    return this.values.indexOf((claim as any)[p]) !== -1;
   }
 
   message(p: string): string[] {

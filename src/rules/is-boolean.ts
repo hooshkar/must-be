@@ -1,12 +1,13 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { IRule } from "../rule";
 
-export class IsBoolean<T extends any> implements IRule<T> {
-  check(claim: any, p: string): boolean {
-    if (claim[p] === null || claim[p] === undefined) {
+export class IsBoolean<T> implements IRule<T> {
+  check(claim: unknown, p: string): boolean {
+    if ((claim as any)[p] === null || (claim as any)[p] === undefined) {
       return true;
     }
 
-    return typeof claim[p] === "boolean";
+    return typeof (claim as any)[p] === "boolean";
   }
 
   message(p: string): string[] {

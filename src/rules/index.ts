@@ -12,3 +12,4 @@ export * from "./min-char";
 export * from "./max-char";
 export * from "./in";
 export * from "./not-in";
+export * from "./key-of";

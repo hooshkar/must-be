@@ -1,12 +1,13 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { IRule } from "../rule";
 
-export class NotEmpty<T extends any> implements IRule<T> {
-  check(claim: any, p: string): boolean {
+export class NotEmpty<T> implements IRule<T> {
+  check(claim: unknown, p: string): boolean {
     return (
-      claim[p] !== null &&
-      claim[p] !== undefined &&
-      claim[p] !== "" &&
-      claim[p] !== 0
+      (claim as any)[p] !== null &&
+      (claim as any)[p] !== undefined &&
+      (claim as any)[p] !== "" &&
+      (claim as any)[p] !== 0
     );
   }
 
