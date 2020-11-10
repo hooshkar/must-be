@@ -5,7 +5,7 @@ import { Keys } from "basecript";
 export class KeyOf<T> implements IRule<T> {
   readonly keys: Array<keyof T>;
 
-  constructor(pattern: T) {
+  constructor(pattern: unknown) {
     this.keys = Keys(pattern);
   }
   check(claim: unknown, p: string): boolean {

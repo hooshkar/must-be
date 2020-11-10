@@ -1,4 +1,4 @@
-import { Required, Defined } from "./rules";
+import { Required, Defined, KeyOf } from "./rules";
 import { IsString, IsNumber, IsBoolean } from "./rules";
 import { NotEmpty, Regex, In, NotIn } from "./rules";
 import { Min, Max, MinChar, MaxChar } from "./rules";
@@ -78,6 +78,11 @@ export class RuleMap<T> {
 
   notIn(...values: unknown[]): RuleMap<T> {
     this._rules.push(new NotIn(values));
+    return this;
+  }
+
+  keyOf(pattern: unknown): RuleMap<T> {
+    this._rules.push(new KeyOf(pattern));
     return this;
   }
 }
