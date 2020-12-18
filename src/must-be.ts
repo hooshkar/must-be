@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable prefer-rest-params */
 import 'reflect-metadata';
-import { Exception, ArgumentsCounter } from 'basecript';
+import { Exception, ArgumentsCounter, ClassType } from 'basecript';
 import { Schema } from './schema';
 import { RuleMap } from './rule-map';
 import { CheckResult } from './check-result';
@@ -25,7 +25,7 @@ export function Must<T, TRuleMap extends RuleMap<T> = RuleMap<T>>(map: TRuleMap)
     };
 }
 
-export function MustBeStrict<T>(constructor: T): T {
+export function MustBeStrict<T extends ClassType<unknown>>(constructor: T): T {
     let schema: Schema<T> | undefined = Reflect.getMetadata(MustBeKey, constructor);
     if (schema === undefined) schema = new Schema<T>();
     schema.strict();
