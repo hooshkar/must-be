@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { IRule } from '../rule';
-import { Keys } from 'basecript';
 
 export class KeyOf<T> implements IRule<T> {
     private _keys: Array<keyof T>;
@@ -9,7 +8,7 @@ export class KeyOf<T> implements IRule<T> {
 
     get keys(): Array<keyof T> {
         if (!this._keys) {
-            this._keys = Keys(this.pattern);
+            this._keys = <(keyof T)[]>Object.keys(this.pattern);
         }
         return this._keys;
     }
