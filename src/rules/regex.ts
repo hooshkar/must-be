@@ -1,18 +1,21 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { IRule } from '../rule';
 
 export class Regex<T> implements IRule<T> {
     constructor(readonly pattern: RegExp) {}
 
-    check(claim: unknown, p: string): boolean {
-        if (typeof (claim as any)[p] !== 'string') {
+    check(claim: unknown): boolean {
+        if (claim === null || claim === undefined) {
             return true;
         }
 
-        return this.pattern.test((claim as any)[p]);
+        if (typeof claim !== 'string') {
+            return false;
+        }
+
+        return this.pattern.test(claim);
     }
 
-    message(p: string): string[] {
-        return [`Property '${p}' is invalid.`];
+    message(name: string): string[] {
+        return [`The '${name}' must be match regex '${this.pattern}'.`];
     }
 }

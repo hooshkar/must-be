@@ -1,4 +1,6 @@
+import { IMap } from './map';
+
 export interface IRule<T> {
-    check(claim: T, p: string | symbol): boolean;
-    message(p: string | symbol): string[];
+    check(claim: T, map: IMap): boolean;
+    message(name: string): string[];
 }

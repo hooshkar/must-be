@@ -1,1 +1,1 @@
-export * from './must-be';
+export * from './must-be-check';

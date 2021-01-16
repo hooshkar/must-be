@@ -1,10 +1,9 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { IRule } from '../rule';
 
 export class KeyOf<T> implements IRule<T> {
     private _keys: Array<keyof T>;
 
-    constructor(private pattern: unknown) {}
+    constructor(private pattern: T) {}
 
     get keys(): Array<keyof T> {
         if (!this._keys) {
@@ -13,11 +12,14 @@ export class KeyOf<T> implements IRule<T> {
         return this._keys;
     }
 
-    check(claim: unknown, p: string): boolean {
-        return this.keys.indexOf((claim as any)[p]) !== -1;
+    check(claim: unknown): boolean {
+        if (claim === null || claim === undefined) {
+            return true;
+        }
+        return this.keys.indexOf(<keyof T>claim) !== -1;
     }
 
-    message(p: string): string[] {
-        return [`Property '${p}' have a invalid value.`];
+    message(name: string): string[] {
+        return [`The '${name}' must be key of '${this.keys}'.`];
     }
 }

@@ -1,14 +1,17 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { IRule } from '../rule';
 
 export class In<T> implements IRule<T> {
-    constructor(readonly values: T[]) {}
+    constructor(readonly values: unknown[]) {}
 
-    check(claim: unknown, p: string): boolean {
-        return this.values.indexOf((claim as any)[p]) !== -1;
+    check(claim: unknown): boolean {
+        if (claim === null || claim === undefined) {
+            return true;
+        }
+
+        return this.values.indexOf(claim) !== -1;
     }
 
-    message(p: string): string[] {
-        return [`Property '${p}' have a invalid value.`];
+    message(name: string): string[] {
+        return [`The '${name}' must be include in '${this.values}'.`];
     }
 }
