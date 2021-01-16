@@ -1,6 +1,6 @@
-import { Required, Defined, KeyOf, IsArray, NotNull } from '../src/rules';
-import { IsString, IsNumber, IsBoolean } from '../src/rules';
-import { NotEmpty, Regex, In, NotIn, Min, Max } from '../src/rules';
+import { Required, Defined, KeyOf, IsArray, NotNull } from '../../src/rules';
+import { IsString, IsNumber, IsBoolean } from '../../src/rules';
+import { NotEmpty, Regex, In, NotIn, Min, Max } from '../../src/rules';
 
 test('must_be_required', () => {
     const required = new Required();

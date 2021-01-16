@@ -1,4 +1,4 @@
-import { Must, Be, Check, MakeItCheck } from '../src';
+import { Must, Be, Check, MakeItCheck } from '../../src';
 
 enum Pattern {
     Basic = 'Basic',
