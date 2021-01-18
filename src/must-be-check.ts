@@ -4,6 +4,8 @@ import { RuleMap } from './rule-map';
 import { IMap } from './map';
 import { exception } from 'console';
 import { ClassType } from './class-type';
+import { CheckResult } from './check-result';
+import { MakeResult } from './make-result';
 
 const MustBeKey = 'MUST:BE:CHECK';
 
@@ -39,30 +41,28 @@ export function Be<T>(map?: IMap): RuleMap<T> {
     return new RuleMap<T>(map);
 }
 
-export function Check<T>(
-    claim: T,
-): {
-    pass: boolean;
-    errors: string[];
-} {
-    const errors = GetSchema(claim.constructor)?.check(claim) ?? [];
+export function Check<T>(claim: T[]): CheckResult;
+export function Check<T>(claim: T): CheckResult;
+export function Check<T>(claim: T[] | T): CheckResult {
+    let schema = GetSchema<T>(claim.constructor);
+    if (!schema) {
+        schema = new Schema();
+    }
+    const errors = schema.check(claim);
     return {
         pass: errors.length === 0,
         errors,
     };
 }
 
-export function MakeItCheck<T>(
-    constructor: ClassType,
-    pool: unknown,
-    ...args: unknown[]
-): { made: T; pass: boolean; errors: string[] } {
-    const schema = GetSchema<T>(constructor);
+export function MakeIt<T>(constructor: [ClassType<T>], pool: unknown): MakeResult<T[]>;
+export function MakeIt<T>(constructor: ClassType<T>, pool: unknown): MakeResult<T>;
+export function MakeIt<T>(constructor: ClassType<T> | [ClassType<T>], pool: unknown): MakeResult<T[] | T> {
+    let schema = GetSchema<T>(constructor);
     if (!schema) {
-        const made = constructor ? <T>new constructor(...args) : undefined;
-        return { made, pass: true, errors: [] };
+        schema = new Schema();
     }
-    const result = schema.make<T>(constructor, pool, ...args);
+    const result = schema.make<T>(constructor, pool);
     return { made: result.made, pass: result.errors.length === 0, errors: result.errors };
 }
 

@@ -6,7 +6,6 @@ export interface IMap<T = unknown> {
     nested?: {
         mode: 'object' | 'array';
         type: ClassType;
-        args?: unknown[];
     };
     strict?: boolean;
 }

@@ -1,4 +1,4 @@
-import { Must, Be, Check, MakeItCheck } from '../../src';
+import { Must, Be, Check, MakeIt } from '..';
 
 enum Pattern {
     Basic = 'Basic',
@@ -28,8 +28,8 @@ class Model {
 }
 
 test('must_be_check', () => {
-    expect(Check(new Model(undefined, '123', false, 'Basic')).errors).toEqual([]);
-    expect(Check(new Model(undefined, '123', false, 'Base')).errors).toEqual([
+    expect(Check(new Model(undefined, 'foo', false, 'Basic')).errors).toEqual([]);
+    expect(Check(new Model(undefined, 'foo', false, 'Base')).errors).toEqual([
         "The 'pattern' must be key of 'Basic,Safe'.",
     ]);
     expect(Check(new Model(undefined, 123, false, 'Basic')).errors).toEqual(["Type of 'name' must be 'string'."]);
@@ -40,25 +40,26 @@ test('must_be_check', () => {
 });
 
 test('must_be_make_it_check', () => {
-    expect(MakeItCheck(Model, { id: undefined, name: '123', state: false, pattern: 'Basic' }).errors).toEqual([]);
-    expect(MakeItCheck(Model, { id: undefined, name: '123', state: false, pattern: 'Base' }).errors).toEqual([
+    expect(MakeIt(Model, { id: undefined, name: 'foo', state: false, pattern: 'Basic' }).errors).toEqual([]);
+    expect(MakeIt(Model, { id: undefined, name: 'foo', state: false, pattern: 'Base' }).errors).toEqual([
         "The 'pattern' must be key of 'Basic,Safe'.",
     ]);
-    expect(MakeItCheck(Model, { id: undefined, name: 123, state: false, pattern: 'Basic' }).errors).toEqual([
+    expect(MakeIt(Model, { id: undefined, name: 123, state: false, pattern: 'Basic' }).errors).toEqual([
         "Type of 'name' must be 'string'.",
     ]);
-    expect(MakeItCheck(Model, { id: undefined, name: 123, state: false }).errors).toEqual([
+    expect(MakeIt(Model, { id: undefined, name: 123, state: false }).errors).toEqual([
         "Type of 'name' must be 'string'.",
         "The 'pattern' is required.",
     ]);
     expect(
-        MakeItCheck(Model, {
+        MakeIt(Model, {
             id: undefined,
-            name: '123',
+            name: 'foo',
             state: false,
             pattern: 'Basic',
+            child: { id: undefined, name: 'foo', state: false, pattern: 'Basic' },
             subItems: [
-                { id: undefined, name: '123', state: false, pattern: 'Base' },
+                { id: undefined, name: 'foo', state: false, pattern: 'Base' },
                 { id: undefined, name: 123, state: false, pattern: 'Basic' },
                 { id: undefined, name: 123, state: false },
             ],
@@ -68,5 +69,33 @@ test('must_be_make_it_check', () => {
         "Type of 'name' must be 'string'.",
         "Type of 'name' must be 'string'.",
         "The 'pattern' is required.",
+    ]);
+});
+
+test('must-be-make-array', () => {
+    const result1 = MakeIt(Model, [
+        { id: undefined, name: 'foo', state: false, pattern: 'Basic' },
+        { id: undefined, name: 'bee', state: false, pattern: 'Basic' },
+    ]);
+    expect(result1.errors).toEqual([]);
+
+    const result2 = MakeIt(
+        [Model],
+        [
+            { id: undefined, name: 'foo', state: false, pattern: 'Base' },
+            {
+                id: undefined,
+                name: 123,
+                state: false,
+                child: { name: 123, state: false, pattern: 'Base' },
+                pattern: 'Safe',
+            },
+        ],
+    );
+    expect(result2.errors).toEqual([
+        "The 'pattern' must be key of 'Basic,Safe'.",
+        "Type of 'name' must be 'string'.",
+        "Type of 'name' must be 'string'.",
+        "The 'pattern' must be key of 'Basic,Safe'.",
     ]);
 });

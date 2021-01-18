@@ -1,6 +1,6 @@
 {
   "name": "must-be-check",
-  "version": "1.1.3",
+  "version": "1.1.4",
   "description": "Must-Be-Check is a TypeScript generic validation tool.",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -13,11 +13,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/hooshkar/must-be.git"
+    "url": "git+https://github.com/hooshkar/must-be-check.git"
   },
   "keywords": [
     "must-be",
-    "must-be-check"
+    "must-be-check",
+    "make-it",
+    "make-it-check"
   ],
   "author": "hooshkar",
   "devDependencies": {
@@ -39,7 +41,7 @@
   "dependencies": {},
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/hooshkar/must-be/issues"
+    "url": "https://github.com/hooshkar/must-be-check/issues"
   },
-  "homepage": "https://github.com/hooshkar/must-be#readme"
+  "homepage": "https://github.com/hooshkar/must-be-check#readme"
 }

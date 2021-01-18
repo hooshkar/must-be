@@ -16,7 +16,24 @@ export class Schema<T> {
         this._rms.set(key, rm);
     }
 
-    check(claim: T): string[] {
+    check(claim: T[]): string[];
+    check(claim: T): string[];
+    check(claim: T[] | T): string[];
+    check(claim: T[] | T): string[] {
+        if (Array.isArray(claim)) {
+            let schema = GetSchema<T>(claim[0]?.constructor);
+            if (!schema) {
+                schema = new Schema();
+            }
+            const errors: string[] = [];
+            claim.forEach((c) => {
+                errors.push(...schema.check(c));
+            });
+            if (this.rm) {
+                errors.push(...this.rm.check(claim, 'claim'));
+            }
+            return errors;
+        }
         const errors: string[] = [];
         if (this.rm?.map?.strict) {
             Object.keys(claim).forEach((k) => {
@@ -26,22 +43,33 @@ export class Schema<T> {
         this._rms.forEach((rm, p) => {
             errors.push(...rm.check(claim[p], p));
         });
+        if (this.rm) {
+            errors.push(...this.rm.check(claim, 'claim'));
+        }
         return errors;
     }
 
-    make<T>(constructor: ClassType, pool: unknown, ...args: unknown[]): { made: T; errors: string[] } {
+    make<T>(constructor: [ClassType], pool: unknown): { made: T[]; errors: string[] };
+    make<T>(constructor: ClassType, pool: unknown): { made: T; errors: string[] };
+    make<T>(constructor: ClassType | [ClassType<T>], pool: unknown): { made: T[] | T; errors: string[] };
+    make<T>(constructor: ClassType | [ClassType<T>], pool: unknown): { made: T[] | T; errors: string[] } {
         if (!constructor) {
             throw exception(`The 'constructor' parameter is required to make it.`);
+        }
+        if (typeof constructor == 'object') {
+            return this.array(constructor, pool);
         }
         if (constructor === String || constructor === Number || constructor === Boolean) {
             return this.preparing(this.rm, pool, 'pool');
         }
-        const made: T = <T>new constructor(...args);
-        if (Array.isArray(made)) {
+        if (typeof pool !== 'object' || Array.isArray(pool)) {
             return this.preparing(this.rm, pool, 'pool');
         }
-        if (typeof pool !== 'object' || Array.isArray(pool)) {
-            return this.preparing(this.rm, made, 'made');
+        const made: T = <T>new constructor();
+        if (Array.isArray(made)) {
+            throw exception(
+                `The 'constructor' parameter must be not an array type. Please use the [ClassType] for array type.`,
+            );
         }
         const keys: string[] = [];
         keys.push(...this._rms.keys());
@@ -65,6 +93,24 @@ export class Schema<T> {
         return { made, errors };
     }
 
+    private array<T>(constructor: [ClassType], pool: unknown): { made: T[]; errors: string[] } {
+        if (!Array.isArray(pool)) {
+            throw new exception('If you want make an array type, please use an array data for pool.');
+        }
+        let schema = GetSchema<T>(constructor[0]);
+        if (!schema) {
+            schema = new Schema();
+        }
+        const errors: string[] = [];
+        const made: T[] = [];
+        pool.forEach((p) => {
+            const result = schema.make<T>(constructor[0], p);
+            errors.push(...result.errors);
+            made.push(result.made);
+        });
+        return { made, errors };
+    }
+
     private preparing<T>(rm: RuleMap, value: unknown, name: string): { made: T; errors: string[] } {
         const errors: string[] = [];
         switch (rm?.map?.nested?.mode) {
@@ -73,7 +119,7 @@ export class Schema<T> {
                     const schema = GetSchema(rm.map.nested.type);
                     if (schema) {
                         value = value.map((p) => {
-                            const m = this.make<T>(rm.map.nested.type, p, ...(rm.map.nested.args ?? []));
+                            const m = this.make<T>(rm.map.nested.type, p);
                             errors.push(...m.errors);
                             return m.made;
                         });
@@ -84,7 +130,7 @@ export class Schema<T> {
             case 'object': {
                 const schema = GetSchema(rm.map.nested.type);
                 if (schema) {
-                    const result = schema.make(rm.map.nested.type, value, ...(rm.map.nested.args ?? []));
+                    const result = schema.make(rm.map.nested.type, value);
                     value = result.made;
                     errors.push(...result.errors);
                 }
