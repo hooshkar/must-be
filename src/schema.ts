@@ -1,4 +1,3 @@
-import { exception } from 'console';
 import { ClassType } from './class-type';
 import { GetSchema } from './must-be-check';
 import { RuleMap } from './rule-map';
@@ -6,7 +5,7 @@ import { RuleMap } from './rule-map';
 export class Schema<T> {
     private readonly _rms: Map<string, RuleMap> = new Map<string, RuleMap>();
 
-    constructor(public readonly rm?: RuleMap) {}
+    constructor(public rm?: RuleMap) {}
 
     has(key: string): boolean {
         return this._rms.has(key);
@@ -54,7 +53,7 @@ export class Schema<T> {
     make<T>(constructor: ClassType | [ClassType<T>], pool: unknown): { made: T[] | T; errors: string[] };
     make<T>(constructor: ClassType | [ClassType<T>], pool: unknown): { made: T[] | T; errors: string[] } {
         if (!constructor) {
-            throw exception(`The 'constructor' parameter is required to make it.`);
+            throw new Error(`The 'constructor' parameter is required to make it.`);
         }
         if (typeof constructor == 'object') {
             return this.array(constructor, pool);
@@ -67,7 +66,7 @@ export class Schema<T> {
         }
         const made: T = <T>new constructor();
         if (Array.isArray(made)) {
-            throw exception(
+            throw new Error(
                 `The 'constructor' parameter must be not an array type. Please use the [ClassType] for array type.`,
             );
         }
@@ -95,7 +94,7 @@ export class Schema<T> {
 
     private array<T>(constructor: [ClassType], pool: unknown): { made: T[]; errors: string[] } {
         if (!Array.isArray(pool)) {
-            throw new exception('If you want make an array type, please use an array data for pool.');
+            throw new Error('If you want make an array type, please use an array data for pool.');
         }
         let schema = GetSchema<T>(constructor[0]);
         if (!schema) {

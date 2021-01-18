@@ -2,7 +2,6 @@ import 'reflect-metadata';
 import { Schema } from './schema';
 import { RuleMap } from './rule-map';
 import { IMap } from './map';
-import { exception } from 'console';
 import { ClassType } from './class-type';
 import { CheckResult } from './check-result';
 import { MakeResult } from './make-result';
@@ -11,28 +10,27 @@ const MustBeKey = 'MUST:BE:CHECK';
 
 export function Must<T, TRuleMap extends RuleMap<T> = RuleMap<T>>(rm: TRuleMap) {
     return (target: unknown, key?: string): void => {
-        const constructor = target.constructor;
-        let schema: Schema<T> = Reflect.getMetadata(MustBeKey, constructor);
         // -------------- Class Decorator --------------
         if (!key) {
+            let schema = GetSchema(target);
             if (!schema) {
-                schema = new Schema<T>(rm);
-                Reflect.defineMetadata(MustBeKey, schema, constructor);
-                return;
+                schema = new Schema<T>();
             }
-
-            throw exception(`Decorator '${MustBeKey}' for classes should be applied first and only once.`);
+            schema.rm = rm;
+            Reflect.defineMetadata(MustBeKey, schema, target.constructor);
+            return;
         }
         // ---------------------------------------------
         // -------------- Property Decorator -----------
+        let schema = GetSchema(target.constructor);
         if (!schema) {
             schema = new Schema<T>();
         }
         if (schema.has(key)) {
-            throw exception(`Decorator '${MustBeKey}' can only be applied once to '${key.toString}'`);
+            throw new Error(`Decorator '${MustBeKey}' can only be applied once to '${key}'`);
         }
         schema.set(key, rm);
-        Reflect.defineMetadata(MustBeKey, schema, constructor);
+        Reflect.defineMetadata(MustBeKey, schema, target.constructor);
         // ---------------------------------------------
     };
 }
@@ -66,6 +64,6 @@ export function MakeIt<T>(constructor: ClassType<T> | [ClassType<T>], pool: unkn
     return { made: result.made, pass: result.errors.length === 0, errors: result.errors };
 }
 
-export function GetSchema<T>(constructor: unknown): Schema<T> {
-    return <Schema<T>>Reflect.getMetadata(MustBeKey, constructor);
+export function GetSchema<T>(target: unknown): Schema<T> {
+    return <Schema<T>>Reflect.getMetadata(MustBeKey, target);
 }
