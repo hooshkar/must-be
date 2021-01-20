@@ -1,4 +1,6 @@
+import { Error } from './error';
+
 export type CheckResult = {
     pass: boolean;
-    errors: unknown;
+    errors: Error;
 };
