@@ -1,4 +1,4 @@
 export type CheckResult = {
     pass: boolean;
-    errors: string[];
+    errors: unknown;
 };

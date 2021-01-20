@@ -11,7 +11,7 @@ export class NotEmpty<T> implements IRule<T> {
         return state;
     }
 
-    message(name: string): string[] {
-        return [`The '${name}' must be not empty.`];
+    message(name: string): string {
+        return `The '${name}' must be not empty.`;
     }
 }

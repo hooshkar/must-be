@@ -22,7 +22,7 @@ export class Max<T> implements IRule<T> {
         return false;
     }
 
-    message(name: string): string[] {
-        return [`Maximum value or length of '${name}' must be '${this.max}'.`];
+    message(name: string): string {
+        return `Maximum value or length of '${name}' must be '${this.max}'.`;
     }
 }

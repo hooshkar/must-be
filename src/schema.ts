@@ -1,11 +1,11 @@
+import { AddError } from './add-error';
 import { ClassType } from './class-type';
 import { GetSchema } from './must-be-check';
 import { RuleMap } from './rule-map';
 
 export class Schema<T> {
     private readonly _rms: Map<string, RuleMap> = new Map<string, RuleMap>();
-
-    constructor(public rm?: RuleMap) {}
+    public rm?: RuleMap;
 
     has(key: string): boolean {
         return this._rms.has(key);
@@ -15,54 +15,90 @@ export class Schema<T> {
         this._rms.set(key, rm);
     }
 
-    check(claim: T[]): string[];
-    check(claim: T): string[];
-    check(claim: T[] | T): string[];
-    check(claim: T[] | T): string[] {
+    check(claim: T[]): unknown;
+    check(claim: T): unknown;
+    check(claim: T[] | T): unknown;
+    check(claim: T[] | T): unknown {
         if (Array.isArray(claim)) {
-            let schema = GetSchema<T>(claim[0]?.constructor);
-            if (!schema) {
-                schema = new Schema();
-            }
-            const errors: string[] = [];
-            claim.forEach((c) => {
-                errors.push(...schema.check(c));
-            });
-            if (this.rm) {
-                errors.push(...this.rm.check(claim, 'claim'));
-            }
-            return errors;
+            return this.checkArray(claim[0].constructor, claim);
         }
-        const errors: string[] = [];
-        if (this.rm?.map?.strict) {
-            Object.keys(claim).forEach((k) => {
-                if (!this.has(k)) errors.push(`Property '${k}' is additional.`);
+        const errors = {};
+        if (claim) {
+            this._rms.forEach((rm, p) => {
+                switch (rm?.map?.nested?.mode) {
+                    case 'array': {
+                        const err = {};
+                        if (Array.isArray(claim[p])) {
+                            const schema = GetSchema<T>(rm.map.nested.type);
+                            for (let i = 0; i < claim[p].length; i++) {
+                                const c = claim[p][i];
+                                const r = schema.check(c);
+                                AddError(err, i, r);
+                            }
+                        }
+                        rm.check(claim[p], 'root', err);
+                        AddError(errors, p, err);
+                        break;
+                    }
+                    case 'object': {
+                        const schema = GetSchema(rm.map.nested.type);
+                        const r = schema.check(claim[p]);
+                        AddError(errors, p, r);
+                        break;
+                    }
+                    default: {
+                        rm.check(claim[p], p, errors);
+                        break;
+                    }
+                }
             });
+            if (this.rm?.map?.strict) {
+                Object.keys(claim).forEach((k) => {
+                    if (!this.has(k)) {
+                        AddError(errors, k, [`Property '${k}' is additional.`]);
+                    }
+                });
+            }
         }
-        this._rms.forEach((rm, p) => {
-            errors.push(...rm.check(claim[p], p));
-        });
         if (this.rm) {
-            errors.push(...this.rm.check(claim, 'claim'));
+            this.rm.check(claim, 'root', errors);
         }
         return errors;
     }
 
-    make<T>(constructor: [ClassType], pool: unknown): { made: T[]; errors: string[] };
-    make<T>(constructor: ClassType, pool: unknown): { made: T; errors: string[] };
-    make<T>(constructor: ClassType | [ClassType<T>], pool: unknown): { made: T[] | T; errors: string[] };
-    make<T>(constructor: ClassType | [ClassType<T>], pool: unknown): { made: T[] | T; errors: string[] } {
+    private checkArray(constructor: unknown, claim: T[]): unknown {
+        const schema = GetSchema<T>(constructor);
+        const errors = {};
+        for (let i = 0; i < claim.length; i++) {
+            const c = claim[i];
+            const r = schema.check(c);
+            AddError(errors, i, r);
+        }
+        if (this.rm) {
+            this.rm.check(claim, 'claim', errors);
+        }
+        return errors;
+    }
+
+    make<T>(constructor: [ClassType], pool: unknown): { made: T[]; errors: unknown };
+    make<T>(constructor: ClassType, pool: unknown): { made: T; errors: unknown };
+    make<T>(constructor: ClassType | [ClassType<T>], pool: unknown): { made: T[] | T; errors: unknown };
+    make<T>(constructor: ClassType | [ClassType<T>], pool: unknown): { made: T[] | T; errors: unknown } {
         if (!constructor) {
             throw new Error(`The 'constructor' parameter is required to make it.`);
         }
         if (typeof constructor == 'object') {
-            return this.array(constructor, pool);
+            return this.MakeArray(constructor, pool);
         }
         if (constructor === String || constructor === Number || constructor === Boolean) {
-            return this.preparing(this.rm, pool, 'pool');
+            const errors = {};
+            const made = this.makeProperty<T>(this.rm, pool, 'pool', errors);
+            return { made, errors };
         }
         if (typeof pool !== 'object' || Array.isArray(pool)) {
-            return this.preparing(this.rm, pool, 'pool');
+            const errors = {};
+            const made = this.makeProperty<T>(this.rm, pool, 'pool', errors);
+            return { made, errors };
         }
         const made: T = <T>new constructor();
         if (Array.isArray(made)) {
@@ -75,64 +111,63 @@ export class Schema<T> {
         if (pool && !this.rm?.map?.strict) {
             keys.push(...Object.keys(pool).filter((k) => !keys.includes(k)));
         }
-        const errors: string[] = [];
+        const errors = {};
         keys.forEach((key) => {
             const rm = this._rms.get(key);
             const map = rm?.map;
             const property = map?.key ? map.key : key;
             const value = pool ? pool[property] : undefined;
-            const cv = this.preparing(rm, value, property);
-            made[key] = cv.made;
-            errors.push(...cv.errors);
+            made[key] = this.makeProperty(rm, value, property, errors);
         });
 
         if (this.rm) {
-            errors.push(...this.rm.check(made, 'made'));
+            this.rm.check(made, 'made', errors);
         }
         return { made, errors };
     }
 
-    private array<T>(constructor: [ClassType], pool: unknown): { made: T[]; errors: string[] } {
+    private MakeArray<T>(constructor: [ClassType], pool: unknown): { made: T[]; errors: unknown } {
         if (!Array.isArray(pool)) {
             throw new Error('If you want make an array type, please use an array data for pool.');
         }
-        let schema = GetSchema<T>(constructor[0]);
-        if (!schema) {
-            schema = new Schema();
-        }
-        const errors: string[] = [];
+        const schema = GetSchema<T>(constructor[0]);
+        const errors = {};
         const made: T[] = [];
-        pool.forEach((p) => {
+        for (let i = 0; i < pool.length; i++) {
+            const p = pool[i];
             const result = schema.make<T>(constructor[0], p);
-            errors.push(...result.errors);
+            AddError(errors, i, result.errors);
             made.push(result.made);
-        });
+        }
+        if (this.rm) {
+            this.rm.check(made, 'made', errors);
+        }
         return { made, errors };
     }
 
-    private preparing<T>(rm: RuleMap, value: unknown, name: string): { made: T; errors: string[] } {
-        const errors: string[] = [];
+    private makeProperty<T>(rm: RuleMap, value: unknown, name: string, errors: unknown): T {
         switch (rm?.map?.nested?.mode) {
             case 'array': {
                 if (Array.isArray(value)) {
                     const schema = GetSchema(rm.map.nested.type);
-                    if (schema) {
-                        value = value.map((p) => {
-                            const m = this.make<T>(rm.map.nested.type, p);
-                            errors.push(...m.errors);
-                            return m.made;
-                        });
+                    const val: T[] = [];
+                    const err = {};
+                    for (let i = 0; i < value.length; i++) {
+                        const p = value[i];
+                        const m = schema.make<T>(rm.map.nested.type, p);
+                        AddError(err, i, m.errors);
+                        val.push(m.made);
                     }
+                    value = val;
+                    AddError(errors, name, err);
                 }
                 break;
             }
             case 'object': {
                 const schema = GetSchema(rm.map.nested.type);
-                if (schema) {
-                    const result = schema.make(rm.map.nested.type, value);
-                    value = result.made;
-                    errors.push(...result.errors);
-                }
+                const result = schema.make(rm.map.nested.type, value);
+                value = result.made;
+                AddError(errors, name, result.errors);
                 break;
             }
         }
@@ -140,8 +175,8 @@ export class Schema<T> {
             value = rm.map.default;
         }
         if (rm) {
-            errors.push(...rm.check(value, name));
+            rm.check(value, name, errors);
         }
-        return { made: <T>value, errors };
+        return <T>value;
     }
 }

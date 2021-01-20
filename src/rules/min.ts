@@ -22,7 +22,7 @@ export class Min<T> implements IRule<T> {
         return false;
     }
 
-    message(name: string): string[] {
-        return [`Minimum value or length of '${name}' must be '${this.min}'.`];
+    message(name: string): string {
+        return `Minimum value or length of '${name}' must be '${this.min}'.`;
     }
 }

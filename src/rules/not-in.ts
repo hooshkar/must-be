@@ -7,7 +7,7 @@ export class NotIn<T> implements IRule<T> {
         return this.values.indexOf(claim) === -1;
     }
 
-    message(name: string): string[] {
-        return [`The '${name}' must be not include in '${this.values}'.`];
+    message(name: string): string {
+        return `The '${name}' must be not include in '${this.values}'.`;
     }
 }

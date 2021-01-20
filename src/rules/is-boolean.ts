@@ -8,7 +8,7 @@ export class IsBoolean<T> implements IRule<T> {
         return typeof claim === 'boolean';
     }
 
-    message(name: string): string[] {
-        return [`Type of '${name}' must be 'boolean'.`];
+    message(name: string): string {
+        return `Type of '${name}' must be 'boolean'.`;
     }
 }

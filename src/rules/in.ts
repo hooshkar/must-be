@@ -11,7 +11,7 @@ export class In<T> implements IRule<T> {
         return this.values.indexOf(claim) !== -1;
     }
 
-    message(name: string): string[] {
-        return [`The '${name}' must be include in '${this.values}'.`];
+    message(name: string): string {
+        return `The '${name}' must be include in '${this.values}'.`;
     }
 }

@@ -8,7 +8,7 @@ export class IsNumber<T> implements IRule<T> {
         return typeof claim === 'number';
     }
 
-    message(name: string): string[] {
-        return [`Type of '${name}' must be 'number'.`];
+    message(name: string): string {
+        return `Type of '${name}' must be 'number'.`;
     }
 }

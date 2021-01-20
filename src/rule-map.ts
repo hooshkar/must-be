@@ -12,14 +12,17 @@ export class RuleMap<T = unknown> {
         return this._rules;
     }
 
-    check(claim: T, name: string): string[] {
-        const errors = new Array<string>();
-        this.rules.forEach((r) => {
+    check(claim: T, name: string, errors: unknown): void {
+        const err: string[] = [];
+        for (let i = 0; i < this.rules.length; i++) {
+            const r = this.rules[i];
             if (!r.check(claim, this.map)) {
-                errors.push(...r.message(name));
+                err.push(r.message(name));
             }
-        });
-        return errors;
+        }
+        if (err.length > 0) {
+            errors[name] = err;
+        }
     }
 
     defined(): this {

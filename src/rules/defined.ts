@@ -5,7 +5,7 @@ export class Defined<T> implements IRule<T> {
         return claim !== undefined;
     }
 
-    message(name: string): string[] {
-        return [`The '${name}' must be defined.`];
+    message(name: string): string {
+        return `The '${name}' must be defined.`;
     }
 }

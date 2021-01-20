@@ -15,7 +15,7 @@ export class Regex<T> implements IRule<T> {
         return this.pattern.test(claim);
     }
 
-    message(name: string): string[] {
-        return [`The '${name}' must be match regex '${this.pattern}'.`];
+    message(name: string): string {
+        return `The '${name}' must be match regex '${this.pattern}'.`;
     }
 }

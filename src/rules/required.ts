@@ -5,7 +5,7 @@ export class Required<T> implements IRule<T> {
         return claim !== null && claim !== undefined;
     }
 
-    message(name: string): string[] {
-        return [`The '${name}' is required.`];
+    message(name: string): string {
+        return `The '${name}' is required.`;
     }
 }

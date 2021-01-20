@@ -19,7 +19,7 @@ export class KeyOf<T> implements IRule<T> {
         return this.keys.indexOf(<keyof T>claim) !== -1;
     }
 
-    message(name: string): string[] {
-        return [`The '${name}' must be key of '${this.keys}'.`];
+    message(name: string): string {
+        return `The '${name}' must be key of '${this.keys}'.`;
     }
 }

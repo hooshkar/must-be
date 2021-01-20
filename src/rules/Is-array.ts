@@ -8,7 +8,7 @@ export class IsArray<T> implements IRule<T> {
         return Array.isArray(claim);
     }
 
-    message(name: string): string[] {
-        return [`Type of '${name}' must be 'array'.`];
+    message(name: string): string {
+        return `Type of '${name}' must be 'array'.`;
     }
 }

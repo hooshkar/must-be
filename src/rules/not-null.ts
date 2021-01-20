@@ -5,7 +5,7 @@ export class NotNull<T> implements IRule<T> {
         return claim !== null;
     }
 
-    message(name: string): string[] {
-        return [`The '${name}' must be not null.`];
+    message(name: string): string {
+        return `The '${name}' must be not null.`;
     }
 }
