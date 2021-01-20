@@ -4,8 +4,7 @@ import { Schema } from './schema';
 import { RuleMap } from './rule-map';
 import { IMap } from './map';
 import { ClassType } from './class-type';
-import { CheckResult } from './check-result';
-import { MakeResult } from './make-result';
+import { Nested } from './nested';
 
 const MustBeKey = 'MUST:BE:CHECK';
 
@@ -34,18 +33,27 @@ export function Be<T>(map?: IMap): RuleMap<T> {
     return new RuleMap<T>(map);
 }
 
-export function Check<T>(claim: T[]): CheckResult;
-export function Check<T>(claim: T): CheckResult;
-export function Check<T>(claim: T[] | T): CheckResult {
+export function Check<T>(claim: T[]): { pass: boolean; errors: { [key: number]: Nested } };
+export function Check<T>(claim: T): { pass: boolean; errors: { [key: string]: Nested } };
+export function Check<T>(claim: T[] | T): { pass: boolean; errors: Nested } {
     const schema = GetSchema<T>(claim.constructor);
     const errors = schema.check(claim);
     const pass = Object.keys(errors).length === 0;
     return { pass, errors: pass ? undefined : errors };
 }
 
-export function MakeIt<T>(constructor: [ClassType<T>], pool: unknown): MakeResult<T[]>;
-export function MakeIt<T>(constructor: ClassType<T>, pool: unknown): MakeResult<T>;
-export function MakeIt<T>(constructor: ClassType<T> | [ClassType<T>], pool: unknown): MakeResult<T[] | T> {
+export function MakeIt<T>(
+    constructor: [ClassType<T>],
+    pool: unknown,
+): { made: T[]; pass: boolean; errors: { [key: number]: Nested } };
+export function MakeIt<T>(
+    constructor: ClassType<T>,
+    pool: unknown,
+): { made: T; pass: boolean; errors: { [key: string]: Nested } };
+export function MakeIt<T>(
+    constructor: ClassType<T> | [ClassType<T>],
+    pool: unknown,
+): { made: T[] | T; pass: boolean; errors: Nested } {
     const schema = GetSchema<T>(constructor);
     const result = schema.make<T>(constructor, pool);
     const pass = Object.keys(result.errors).length === 0;

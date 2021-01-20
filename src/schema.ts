@@ -1,6 +1,6 @@
 import { AddError } from './add-error';
 import { ClassType } from './class-type';
-import { Error } from './error';
+import { Nested } from './nested';
 import { GetSchema } from './must-be-check';
 import { RuleMap } from './rule-map';
 
@@ -16,10 +16,10 @@ export class Schema<T> {
         this._rms.set(key, rm);
     }
 
-    check(claim: T[]): Error;
-    check(claim: T): Error;
-    check(claim: T[] | T): Error;
-    check(claim: T[] | T): Error {
+    check(claim: T[]): { [key: number]: Nested };
+    check(claim: T): { [key: string]: Nested };
+    check(claim: T[] | T): Nested;
+    check(claim: T[] | T): Nested {
         if (Array.isArray(claim)) {
             return this.checkArray(claim[0].constructor, claim);
         }
@@ -67,7 +67,7 @@ export class Schema<T> {
         return errors;
     }
 
-    private checkArray(constructor: unknown, claim: T[]): Error {
+    private checkArray(constructor: unknown, claim: T[]): Nested {
         const schema = GetSchema<T>(constructor);
         const errors = {};
         for (let i = 0; i < claim.length; i++) {
@@ -81,10 +81,10 @@ export class Schema<T> {
         return errors;
     }
 
-    make<T>(constructor: [ClassType], pool: unknown): { made: T[]; errors: Error };
-    make<T>(constructor: ClassType, pool: unknown): { made: T; errors: Error };
-    make<T>(constructor: ClassType | [ClassType<T>], pool: unknown): { made: T[] | T; errors: Error };
-    make<T>(constructor: ClassType | [ClassType<T>], pool: unknown): { made: T[] | T; errors: Error } {
+    make<T>(constructor: [ClassType], pool: unknown): { made: T[]; errors: { [key: number]: Nested } };
+    make<T>(constructor: ClassType, pool: unknown): { made: T; errors: { [key: string]: Nested } };
+    make<T>(constructor: ClassType | [ClassType<T>], pool: unknown): { made: T[] | T; errors: Nested };
+    make<T>(constructor: ClassType | [ClassType<T>], pool: unknown): { made: T[] | T; errors: Nested } {
         if (!constructor) {
             throw new Error(`The 'constructor' parameter is required to make it.`);
         }
@@ -127,7 +127,7 @@ export class Schema<T> {
         return { made, errors };
     }
 
-    private MakeArray<T>(constructor: [ClassType], pool: unknown): { made: T[]; errors: Error } {
+    private MakeArray<T>(constructor: [ClassType], pool: unknown): { made: T[]; errors: Nested } {
         if (!Array.isArray(pool)) {
             throw new Error('If you want make an array type, please use an array data for pool.');
         }
@@ -146,7 +146,7 @@ export class Schema<T> {
         return { made, errors };
     }
 
-    private makeProperty<T>(rm: RuleMap, value: unknown, name: string, errors: Error): T {
+    private makeProperty<T>(rm: RuleMap, value: unknown, name: string, errors: Nested): T {
         switch (rm?.map?.nested?.mode) {
             case 'array': {
                 if (Array.isArray(value)) {

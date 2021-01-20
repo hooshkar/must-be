@@ -4,7 +4,7 @@ import { NotEmpty, Regex, In, NotIn, Min, Max } from './rules';
 import { DEFAULT_ROOT_KEY } from './constant';
 import { IRule } from './rule';
 import { IMap } from './map';
-import { Error } from './error';
+import { Nested } from './nested';
 
 export class RuleMap<T = unknown> {
     constructor(public readonly map?: IMap) {}
@@ -18,7 +18,7 @@ export class RuleMap<T = unknown> {
         return this.map?.key ?? DEFAULT_ROOT_KEY;
     }
 
-    check(claim: T, name: string, errors: Error): void {
+    check(claim: T, name: string, errors: Nested): void {
         const err: string[] = [];
         for (let i = 0; i < this.rules.length; i++) {
             const r = this.rules[i];
