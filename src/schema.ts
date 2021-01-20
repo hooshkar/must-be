@@ -36,7 +36,7 @@ export class Schema<T> {
                                 AddError(err, i, r);
                             }
                         }
-                        rm.check(claim[p], 'root', err);
+                        rm.check(claim[p], rm.root, err);
                         AddError(errors, p, err);
                         break;
                     }
@@ -61,7 +61,7 @@ export class Schema<T> {
             }
         }
         if (this.rm) {
-            this.rm.check(claim, 'root', errors);
+            this.rm.check(claim, this.rm.root, errors);
         }
         return errors;
     }
@@ -75,7 +75,7 @@ export class Schema<T> {
             AddError(errors, i, r);
         }
         if (this.rm) {
-            this.rm.check(claim, 'claim', errors);
+            this.rm.check(claim, this.rm.root, errors);
         }
         return errors;
     }
@@ -121,7 +121,7 @@ export class Schema<T> {
         });
 
         if (this.rm) {
-            this.rm.check(made, 'made', errors);
+            this.rm.check(made, this.rm.root, errors);
         }
         return { made, errors };
     }
@@ -140,7 +140,7 @@ export class Schema<T> {
             made.push(result.made);
         }
         if (this.rm) {
-            this.rm.check(made, 'made', errors);
+            this.rm.check(made, this.rm.root, errors);
         }
         return { made, errors };
     }

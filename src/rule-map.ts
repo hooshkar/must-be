@@ -1,6 +1,7 @@
 import { Required, Defined, KeyOf, NotNull } from './rules';
 import { IsString, IsNumber, IsBoolean, IsArray } from './rules';
 import { NotEmpty, Regex, In, NotIn, Min, Max } from './rules';
+import { DEFAULT_ROOT_KEY } from './constant';
 import { IRule } from './rule';
 import { IMap } from './map';
 
@@ -10,6 +11,10 @@ export class RuleMap<T = unknown> {
     private readonly _rules: IRule<T>[] = [];
     get rules(): IRule<T>[] {
         return this._rules;
+    }
+
+    get root(): string {
+        return this.map?.key ?? DEFAULT_ROOT_KEY;
     }
 
     check(claim: T, name: string, errors: unknown): void {
