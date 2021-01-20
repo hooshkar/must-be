@@ -1,1 +1,1 @@
-export type Error = { [key: number]: Error | string[] } | { [key: number]: Error | string[] } | string[];
+export type Error = { [key: string]: Error | string[] } | { [key: number]: Error | string[] } | string[];
