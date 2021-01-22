@@ -1,6 +1,6 @@
 {
   "name": "must-be-check",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Must-Be-Check is a TypeScript generic validation tool.",
   "main": "build/index.js",
   "types": "build/index.d.ts",

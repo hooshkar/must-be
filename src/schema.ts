@@ -108,17 +108,21 @@ export class Schema<T> {
             );
         }
         const keys: string[] = [];
+        const poolKeys = Object.keys(pool);
         keys.push(...this._rms.keys());
         if (pool && !this.rm?.map?.strict) {
-            keys.push(...Object.keys(pool).filter((k) => !keys.includes(k)));
+            keys.push(...poolKeys.filter((k) => !keys.includes(k)));
         }
         const errors = {};
         keys.forEach((key) => {
             const rm = this._rms.get(key);
             const map = rm?.map;
             const property = map?.key ? map.key : key;
-            const value = pool ? pool[property] : undefined;
-            made[key] = this.makeProperty(rm, value, property, errors);
+            let value = pool ? pool[property] : undefined;
+            value = this.makeProperty(rm, value, property, errors);
+            if (value !== undefined || poolKeys.indexOf(property) !== -1) {
+                made[key] = value;
+            }
         });
 
         if (this.rm) {
