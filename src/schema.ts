@@ -5,15 +5,19 @@ import { GetSchema } from './must-be-check';
 import { RuleMap } from './rule-map';
 
 export class Schema<T> {
-    private readonly _rms: Map<string, RuleMap> = new Map<string, RuleMap>();
-    public rm?: RuleMap;
+    private readonly _rms: Map<string, RuleMap<T>> = new Map<string, RuleMap<T>>();
+    private _rm?: RuleMap<T>;
 
     has(key: string): boolean {
         return this._rms.has(key);
     }
 
     set(key: string, rm: RuleMap<T>): void {
-        this._rms.set(key, rm);
+        if (key) {
+            this._rms.set(key, rm);
+        } else {
+            this._rm = rm;
+        }
     }
 
     check(claim: T[]): { [key: number]: Nested };
@@ -37,23 +41,24 @@ export class Schema<T> {
                                 AddError(err, i, r);
                             }
                         }
-                        rm.check(claim[p], rm.root, err);
+                        rm.check(claim[p], claim, p, undefined, err);
                         AddError(errors, p, err);
                         break;
                     }
                     case 'object': {
                         const schema = GetSchema(rm.map.nested.type);
-                        const r = schema.check(claim[p]);
-                        AddError(errors, p, r);
+                        const err = schema.check(claim[p]);
+                        rm.check(claim[p], claim, p, undefined, err);
+                        AddError(errors, p, err);
                         break;
                     }
                     default: {
-                        rm.check(claim[p], p, errors);
+                        rm.check(claim[p], claim, p, p, errors);
                         break;
                     }
                 }
             });
-            if (this.rm?.map?.strict) {
+            if (this._rm?.map?.strict) {
                 Object.keys(claim).forEach((k) => {
                     if (!this.has(k)) {
                         AddError(errors, k, [`Property '${k}' is additional.`]);
@@ -61,8 +66,8 @@ export class Schema<T> {
                 });
             }
         }
-        if (this.rm) {
-            this.rm.check(claim, this.rm.root, errors);
+        if (this._rm) {
+            this._rm.check(claim, undefined, undefined, undefined, errors);
         }
         return errors;
     }
@@ -75,8 +80,8 @@ export class Schema<T> {
             const r = schema.check(c);
             AddError(errors, i, r);
         }
-        if (this.rm) {
-            this.rm.check(claim, this.rm.root, errors);
+        if (this._rm) {
+            this._rm.check(claim, undefined, undefined, undefined, errors);
         }
         return errors;
     }
@@ -93,12 +98,12 @@ export class Schema<T> {
         }
         if (constructor === String || constructor === Number || constructor === Boolean) {
             const errors = {};
-            const made = this.makeProperty<T>(this.rm, pool, 'pool', errors);
+            const made = this.makeProperty<T>(this._rm, pool, undefined, undefined, errors);
             return { made, errors };
         }
         if (typeof pool !== 'object' || Array.isArray(pool)) {
             const errors = {};
-            const made = this.makeProperty<T>(this.rm, pool, 'pool', errors);
+            const made = this.makeProperty<T>(this._rm, pool, undefined, undefined, errors);
             return { made, errors };
         }
         const made: T = <T>new constructor();
@@ -110,7 +115,7 @@ export class Schema<T> {
         const keys: string[] = [];
         const poolKeys = Object.keys(pool);
         keys.push(...this._rms.keys());
-        if (pool && !this.rm?.map?.strict) {
+        if (pool && !this._rm?.map?.strict) {
             keys.push(...poolKeys.filter((k) => !keys.includes(k)));
         }
         const errors = {};
@@ -118,15 +123,14 @@ export class Schema<T> {
             const rm = this._rms.get(key);
             const map = rm?.map;
             const property = map?.key ? map.key : key;
-            let value = pool ? pool[property] : undefined;
-            value = this.makeProperty(rm, value, property, errors);
+            const value = this.makeProperty(rm, pool, property, property, errors);
             if (value !== undefined || poolKeys.indexOf(property) !== -1) {
                 made[key] = value;
             }
         });
 
-        if (this.rm) {
-            this.rm.check(made, this.rm.root, errors);
+        if (this._rm) {
+            this._rm.check(made, undefined, undefined, undefined, errors);
         }
         return { made, errors };
     }
@@ -144,13 +148,14 @@ export class Schema<T> {
             AddError(errors, i, result.errors);
             made.push(result.made);
         }
-        if (this.rm) {
-            this.rm.check(made, this.rm.root, errors);
+        if (this._rm) {
+            this._rm.check(made, undefined, undefined, undefined, errors);
         }
         return { made, errors };
     }
 
-    private makeProperty<T>(rm: RuleMap, value: unknown, name: string, errors: Nested): T {
+    private makeProperty<T>(rm: RuleMap, pool: unknown, name: string, errKey: string, errors: Nested): T {
+        let value = pool && name ? pool[name] : undefined;
         switch (rm?.map?.nested?.mode) {
             case 'array': {
                 if (Array.isArray(value)) {
@@ -164,6 +169,10 @@ export class Schema<T> {
                         val.push(m.made);
                     }
                     value = val;
+                    if (rm?.map?.default && !value) {
+                        value = rm.map.default;
+                    }
+                    rm.check(value, pool, name, errKey, err);
                     AddError(errors, name, err);
                 }
                 break;
@@ -172,15 +181,23 @@ export class Schema<T> {
                 const schema = GetSchema(rm.map.nested.type);
                 const result = schema.make(rm.map.nested.type, value);
                 value = result.made;
-                AddError(errors, name, result.errors);
+                const err = result.errors;
+                if (rm?.map?.default && !value) {
+                    value = rm.map.default;
+                }
+                rm.check(value, pool, name, errKey, err);
+                AddError(errors, name, err);
                 break;
             }
-        }
-        if (rm?.map?.default && !value) {
-            value = rm.map.default;
-        }
-        if (rm) {
-            rm.check(value, name, errors);
+            default: {
+                if (rm?.map?.default && !value) {
+                    value = rm.map.default;
+                }
+                if (rm) {
+                    rm.check(value, pool, name, errKey, errors);
+                }
+                break;
+            }
         }
         return <T>value;
     }

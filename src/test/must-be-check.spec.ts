@@ -19,6 +19,8 @@ class Model {
     pattern?: unknown;
     @Must(Be({ nested: { mode: 'array', type: Model } }).isArray())
     subItems?: unknown;
+    @Must(Be().if(Be().exist()).then(Be().required()).end())
+    address?: unknown;
 }
 
 function CreateModel(
@@ -90,10 +92,13 @@ test('must_be_make_it_check', () => {
 });
 
 test('must-be-make-array', () => {
-    const result1 = MakeIt(Model, [
-        { id: undefined, name: 'foo', state: false, pattern: 'Basic' },
-        { id: undefined, name: 'bee', state: false, pattern: 'Basic' },
-    ]);
+    const result1 = MakeIt(
+        [Model],
+        [
+            { id: undefined, name: 'foo', state: false, pattern: 'Basic' },
+            { id: undefined, name: 'bee', state: false, pattern: 'Basic' },
+        ],
+    );
     expect(result1.errors).toEqual(undefined);
 
     const result2 = MakeIt(
@@ -119,5 +124,21 @@ test('must-be-make-array', () => {
                 pattern: ["The 'pattern' must be key of 'Basic,Safe'."],
             },
         },
+    });
+});
+
+test('must-be-if', () => {
+    const result1 = MakeIt(
+        [Model],
+        [
+            { id: undefined, name: 'foo', state: false, pattern: 'Basic' },
+            { id: undefined, name: 'bee', state: false, pattern: 'Basic', address: undefined },
+        ],
+    );
+    expect(result1.errors).toEqual({ 1: { address: ["The 'address' is required."] } });
+
+    const result2 = MakeIt(Model, { id: undefined, name: 'foo', state: false, pattern: 'Basic', address: undefined });
+    expect(result2.errors).toEqual({
+        address: ["The 'address' is required."],
     });
 });

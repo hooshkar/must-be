@@ -1,4 +1,4 @@
-import { Required, Defined, KeyOf, IsArray, NotNull } from '../../src/rules';
+import { Required, Defined, KeyOf, IsArray, NotNull, Exist } from '../../src/rules';
 import { IsString, IsNumber, IsBoolean } from '../../src/rules';
 import { NotEmpty, Regex, In, NotIn, Min, Max } from '../../src/rules';
 
@@ -9,6 +9,12 @@ test('must_be_required', () => {
     expect(required.check({ id: 0 }['id'])).toBe(true);
     expect(required.check({ id: '' }['id'])).toBe(true);
     expect(required.check({ id: true }['id'])).toBe(true);
+});
+
+test('must_be_exist', () => {
+    const exist = new Exist();
+    expect(exist.check({ id: undefined }['id'], { id: undefined }, 'id')).toBe(true);
+    expect(exist.check({}['id'], {}, 'id')).toBe(false);
 });
 
 test('must_be_defined', () => {

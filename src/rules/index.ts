@@ -12,3 +12,4 @@ export * from './in';
 export * from './not-in';
 export * from './key-of';
 export * from './not-null';
+export * from './exist';

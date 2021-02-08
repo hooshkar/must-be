@@ -8,12 +8,12 @@ import { Nested } from './nested';
 
 const MustBeKey = 'MUST:BE:CHECK';
 
-export function Must<T, TRuleMap extends RuleMap<T> = RuleMap<T>>(rm: TRuleMap) {
+export function Must<T>(rm: RuleMap<T>) {
     return (target: unknown, key?: string): void => {
         // -------------- Class Decorator --------------
         if (!key) {
             const schema = GetSchema(target);
-            schema.rm = rm;
+            schema.set(undefined, rm);
             Reflect.defineMetadata(MustBeKey, schema, target.constructor);
             return;
         }

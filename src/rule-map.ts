@@ -1,34 +1,65 @@
-import { Required, Defined, KeyOf, NotNull } from './rules';
+import { Required, Defined, KeyOf, NotNull, Exist } from './rules';
 import { IsString, IsNumber, IsBoolean, IsArray } from './rules';
 import { NotEmpty, Regex, In, NotIn, Min, Max } from './rules';
-import { DEFAULT_ROOT_KEY } from './constant';
 import { IRule } from './rule';
 import { IMap } from './map';
 import { Nested } from './nested';
+import { ICondition, If } from './Condition';
+import { AddError } from './add-error';
 
 export class RuleMap<T = unknown> {
-    constructor(public readonly map?: IMap) {}
-
     private readonly _rules: IRule<T>[] = [];
-    get rules(): IRule<T>[] {
-        return this._rules;
+    private readonly _conditions: ICondition<T>[] = [];
+    private readonly _map?: IMap;
+
+    constructor(map?: IMap) {
+        this._map = map;
     }
 
-    get root(): string {
-        return this.map?.key ?? DEFAULT_ROOT_KEY;
+    get map(): IMap {
+        return this._map;
     }
 
-    check(claim: T, name: string, errors: Nested): void {
+    check(claim: unknown, pool: T, property: string, errKey: string, errors: Nested): void {
         const err: string[] = [];
-        for (let i = 0; i < this.rules.length; i++) {
-            const r = this.rules[i];
-            if (!r.check(claim, this.map)) {
-                err.push(r.message(name));
+        for (let i = 0; i < this._rules.length; i++) {
+            const r = this._rules[i];
+            if (!r.check(claim, pool, property, this.map)) {
+                err.push(r.message(property ?? 'claim'));
             }
         }
+
+        this._conditions.forEach((c) => {
+            if (c.if._rules.every((r) => !r.check(claim, pool, property, this.map))) {
+                if (c.else) {
+                    c.else.check(claim, pool, property, errKey, errors);
+                }
+            } else {
+                if (c.then) {
+                    c.then.check(claim, pool, property, errKey, errors);
+                }
+            }
+        });
+
         if (err.length > 0) {
-            errors[name] = err;
+            AddError(errors, errKey, err);
         }
+    }
+
+    conditional(condition: ICondition<T>): void {
+        if (this._conditions.indexOf(condition) != -1) {
+            throw new Error('the condition has already been added.');
+        }
+        this._conditions.push(condition);
+    }
+
+    if(rm: RuleMap<T>): If<T> {
+        return new If(this, rm);
+    }
+
+    exist(): this {
+        this._rules.push(new Exist());
+        return this;
     }
 
     defined(): this {
