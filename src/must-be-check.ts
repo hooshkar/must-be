@@ -43,15 +43,15 @@ export function Check<T>(claim: T[] | T): { pass: boolean; errors: Nested } {
 }
 
 export function MakeIt<T>(
-    constructor: [ClassType<T>],
+    constructor: [ClassType],
     pool: unknown,
 ): { made: T[]; pass: boolean; errors: { [key: number]: Nested } };
 export function MakeIt<T>(
-    constructor: ClassType<T>,
+    constructor: ClassType,
     pool: unknown,
 ): { made: T; pass: boolean; errors: { [key: string]: Nested } };
 export function MakeIt<T>(
-    constructor: ClassType<T> | [ClassType<T>],
+    constructor: ClassType | [ClassType],
     pool: unknown,
 ): { made: T[] | T; pass: boolean; errors: Nested } {
     const schema = GetSchema<T>(constructor);

@@ -88,8 +88,8 @@ export class Schema<T> {
 
     make<T>(constructor: [ClassType], pool: unknown): { made: T[]; errors: { [key: number]: Nested } };
     make<T>(constructor: ClassType, pool: unknown): { made: T; errors: { [key: string]: Nested } };
-    make<T>(constructor: ClassType | [ClassType<T>], pool: unknown): { made: T[] | T; errors: Nested };
-    make<T>(constructor: ClassType | [ClassType<T>], pool: unknown): { made: T[] | T; errors: Nested } {
+    make<T>(constructor: ClassType | [ClassType], pool: unknown): { made: T[] | T; errors: Nested };
+    make<T>(constructor: ClassType | [ClassType], pool: unknown): { made: T[] | T; errors: Nested } {
         if (!constructor) {
             throw new Error(`The 'constructor' parameter is required to make it.`);
         }
