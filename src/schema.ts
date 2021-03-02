@@ -112,13 +112,22 @@ export class Schema<T> {
                 `The 'constructor' parameter must be not an array type. Please use the [ClassType] for array type.`,
             );
         }
+        const errors = {};
         const keys: string[] = [];
         const poolKeys = Object.keys(pool);
         keys.push(...this._rms.keys());
-        if (pool && !this._rm?.map?.strict) {
-            keys.push(...poolKeys.filter((k) => !keys.includes(k)));
+        if (pool) {
+            const additional = poolKeys.filter((k) => !keys.includes(k));
+            if (additional.length > 0) {
+                if (this._rm?.map?.strict) {
+                    additional.forEach((k) => {
+                        AddError(errors, k, [`Property '${k}' is additional.`]);
+                    });
+                } else {
+                    keys.push(...additional);
+                }
+            }
         }
-        const errors = {};
         keys.forEach((key) => {
             const rm = this._rms.get(key);
             const map = rm?.map;
